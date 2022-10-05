@@ -292,7 +292,7 @@ def evaluate(board: BoardNode):
         return 0
 
 
-def minimax(board: BoardNode, is_max, depth, alpha, beta):
+def minimax(board: BoardNode, is_max: bool, depth: int, alpha: int, beta: int):
     """Recursive method.  Checks all possible moves up to a given depth and returns most likely win state
 
     :param board: BoardNode
@@ -330,3 +330,5 @@ def minimax(board: BoardNode, is_max, depth, alpha, beta):
     return [best_val, best_move]
 
 
+if __name__ == '__main__':
+    container = BoardNodeContainer()

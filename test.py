@@ -4,7 +4,6 @@ from methods import *
 Test module
 """
 
-container = BoardNodeContainer()
 board = container.get_board([0, 0])
 
 
