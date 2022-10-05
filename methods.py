@@ -33,7 +33,6 @@ def generate_player_id(is_max: bool):
     return "X" if is_max else "O"
 
 
-
 class PositionNode(object):
     """
     Single position of a 3x3 board
@@ -100,8 +99,8 @@ class BoardNode:
         # contains 3x3 board positions
         self.position_container = {}
 
-        # reference for number of open positions
-        self.remaining_positions = 0
+        # contains open position key pairs
+        self.remaining_position_list = []
 
         # if a board is passed as a parameter, this node becomes a copy of that board
         # used for minimax simulations
@@ -118,8 +117,10 @@ class BoardNode:
         pos_id = generate_position_id(xy)
         if pos_id not in self.position_container.keys():
             x, y = xy
+
             self.position_container[pos_id] = PositionNode(x, y, pos_id)
-            self.remaining_positions += 1
+            self.remaining_position_list.append([x, y])
+            self.remaining_positions = len(self.remaining_position_list)
             return self.position_container[pos_id]
         debug(f'Error in BoardNode().generate_position(xy={xy})')
 
@@ -132,13 +133,19 @@ class BoardNode:
         """
         pos_id = generate_position_id(xy)
         if pos_id in self.position_container.keys():
+            x, y = xy
             self.position_container[pos_id].set_player(is_max)
-            self.remaining_positions -= 1
+            idx = self.remaining_position_list.index([x, y])
+            self.remaining_position_list.pop(idx)
+            self.remaining_positions = len(self.remaining_position_list)
             return self.position_container[pos_id].get_positions()
         debug(f'Error in BoardNode().set_player_position(xy={xy}, is_max={is_max})')
 
     def has_remaining_positions(self):
         return self.remaining_positions > 0
+
+    def num_remaining_positions(self):
+        return len(self.remaining_position_list)
 
     def get_position(self, xy: list):
         """Gets PositionNode based on [x, y] key pair value
@@ -157,6 +164,32 @@ class BoardNode:
             node.open = True
             self.remaining_positions += 1
         return
+
+    def display(self):
+        string = '\t-------\n\t|'
+
+        idx = 1
+        for key in self.position_container.keys():
+            string += f'{self.position_container[key].get_player()}|'
+
+            if idx % 3 == 0:
+                if idx < 9:
+                    string += '\n\t|'
+            idx += 1
+        string += '\n\t-------'
+        debug(string)
+
+    def display_winner(self):
+        string = "\t*** "
+        if is_winner(self, True):
+            string += "X Wins"
+        elif is_winner(self, False):
+            string += "O Wins"
+        else:
+            string += "Tie"
+        string += " ***\n"
+        debug(string)
+
 
 class BoardNodeContainer:
     """
@@ -246,13 +279,20 @@ def is_winner(board: BoardNode, is_max):
     return False
 
 
-
-def is_game_over(board):
-    pass
-
+def is_game_over(board: BoardNode):
+    return is_winner(board, True) or is_winner(board, False) or not board.has_remaining_positions()
 
 
-def minimax(board, is_max, depth, alpha, beta):
+def evaluate(board: BoardNode):
+    if is_winner(board, True):
+        return 1
+    elif is_winner(board, False):
+        return -1
+    else:
+        return 0
+
+
+def minimax(board: BoardNode, is_max, depth, alpha, beta):
     """Recursive method.  Checks all possible moves up to a given depth and returns most likely win state
 
     :param board: BoardNode
@@ -264,6 +304,29 @@ def minimax(board, is_max, depth, alpha, beta):
     """
 
     # check if a winning move has been made; there are no remaining positions; or depth has reached 0
+    if is_game_over(board) or depth < 1:
+        return [evaluate(board), '']
 
-    pass
+    best_val = -float("Inf") if is_max else float("Inf")
+    moves = board.remaining_position_list
+    best_move = moves[0]
+
+    for move in moves:
+        new_board = BoardNode(board=board)
+        new_board.set_player_position(move, is_max)
+        sim_val = minimax(new_board, not is_max, depth - 1, alpha, beta)[0]
+
+        if (is_max and sim_val > best_val) or (not is_max and sim_val < best_val):
+            best_val = sim_val
+            best_move = move
+            if is_max:
+                alpha = max(alpha, best_val)
+            else:
+                beta = min(beta, best_val)
+
+            if alpha >= beta:
+                break
+
+    return [best_val, best_move]
+
 
