@@ -159,6 +159,10 @@ class BoardNode:
         debug(f'Error in BoardNode.get_position(xy={xy}): position_id={position_id}')
 
     def reset(self):
+        """Resets board to new state
+
+        :return: None
+        """
         for node in self.position_container.values():
             node.player = '.'
             node.open = True
@@ -166,6 +170,10 @@ class BoardNode:
         return
 
     def display(self):
+        """Displays 3x3 representation of board with player positions
+
+        :return: None
+        """
         string = '\t-------\n\t|'
 
         idx = 1
@@ -180,6 +188,10 @@ class BoardNode:
         debug(string)
 
     def display_winner(self):
+        """Displays game winner or tie at end of game
+
+        :return:
+        """
         string = "\t*** "
         if is_winner(self, True):
             string += "X Wins"
@@ -188,7 +200,7 @@ class BoardNode:
         else:
             string += "Tie"
         string += " ***\n"
-        debug(string)
+        print(string)
 
 
 class BoardNodeContainer:
